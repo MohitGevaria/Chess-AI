@@ -16,11 +16,15 @@ number = list(map(str, [i for i in reversed(range(1, 9))]))
 alphabets = ["a", "b", "c", "d", "e", "f", "g", "h"]
 pos = {}
 pos_color = {}
+pos_reverse = {}
 box = 0
+unique = [i for i in range(0,900,100)]
+
 
 
 def board(width):
     global box
+    global pos_reverse
     box = width // 8
     y = width // (8 * 2)
     for i in number:
@@ -29,6 +33,8 @@ def board(width):
             pos[j + i] = (x, y)
             x += box
         y += box
+    pos_reverse={y:x for x,y in pos.items()}
+         
     
 
 
@@ -57,3 +63,7 @@ def draw_board(win):
         else:
             intial_color = 0
     pygame.display.update()
+
+if __name__=="__main__":
+    board(800)
+    print(pos_reverse)
