@@ -8,6 +8,7 @@ class Knight(piece):
         self.possible = []
         self.color = color
         self.possible_kill = []
+        self.king_line_of_attack = []
 
     # draws the piece on the board
     def draw(self, win):
@@ -27,7 +28,7 @@ class Knight(piece):
         self.possible_kill=[] 
         self.draw(win) 
     
-    def utility_check(self, xpos, ypos, opponent_list, friendly_list, change_x, change_y):
+    def utility_check(self, xpos, ypos, opponent_list, friendly_list, change_x, change_y,):
         xpos = xpos + change_x
         ypos = ypos + change_y
     
@@ -37,14 +38,33 @@ class Knight(piece):
             if (xpos,ypos) not in friendly_list and (xpos,ypos) not in opponent_list:
                 self.possible.append((xpos,ypos)) 
             if (xpos,ypos) in opponent_list:
+                
                 self.possible_kill.append((xpos,ypos))
 
             xpos = xpos + change_x
             ypos = ypos + change_y
     
-        
+    def on_check_move(self, king_checkers ,opponent_list,friendly_list, friendly_king,opponent_king):
+        king_checkers.possible_moves( friendly_list, opponent_list, friendly_king)
+        temp= []
+        temp_kill=[]
+        king_checkers_possible = king_checkers.king_line_of_attack
+        self.possible_moves(opponent_list,friendly_list, opponent_king)
+        for i in self.possible:
+            if i in king_checkers_possible:
+                temp.append(i)
+ 
+        if (king_checkers.x,king_checkers.y) in self.possible_kill:
+           
+            temp_kill.append((king_checkers.x,king_checkers.y))
 
-    def possible_moves(self, win, opponent_list, friendly_list):
+        self.possible=temp
+        self.possible_kill=temp_kill
+        
+        
+    
+
+    def possible_moves(self,  opponent_list, friendly_list,opponent_king):
         """Prior Moves check.
         """
         xpos=self.x
@@ -58,7 +78,7 @@ class Knight(piece):
         self.utility_check(xpos, ypos, opponent_list, friendly_list, 200,-100)
         self.utility_check(xpos, ypos, opponent_list, friendly_list, 200,100)
 
-        super().possible_draw(win, self.possible, self.possible_kill)
+        #super().possible_draw(win, self.possible, self.possible_kill)
 
     def possible_moves_remove(self, win):
 
@@ -69,7 +89,16 @@ class Knight(piece):
             super().erase(win, i)
         self.possible_kill=[]
 
-            
+    
+
+    def possible_move_on_check(self, newx, newy):
+        """
+        posterior move.
+        """
+        self.x = newx
+        self.y = newy
+        
+    
 
     def name(self):
         return "knight"

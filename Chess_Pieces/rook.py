@@ -8,6 +8,7 @@ class Rook(piece):
         self.possible = []
         self.color = color
         self.possible_kill = []
+        self.king_line_of_attack = []
 
     # draws the piece on the board
     def draw(self, win):
@@ -27,36 +28,42 @@ class Rook(piece):
         self.possible_kill=[] 
         self.draw(win) 
     
-    def utility_check(self, xpos, ypos, opponent_list, friendly_list, change_x, change_y):
+    
+    def utility_check(self, xpos, ypos, opponent_list, friendly_list, change_x, change_y, opponent_king):
         xpos = xpos + change_x
         ypos = ypos + change_y
-    
+        temp = []
         while xpos<=800 and ypos <= 800  and xpos>=0 and ypos>=0: 
             
             if (xpos,ypos) in friendly_list:
                 break
             if (xpos,ypos) not in friendly_list and (xpos,ypos) not in opponent_list:
-                self.possible.append((xpos,ypos)) 
+                self.possible.append((xpos,ypos))
+                temp.append((xpos,ypos))  
+            if(xpos == opponent_king.x)and (ypos == opponent_king.y):
+                self.king_line_of_attack = temp
+            
             if (xpos,ypos) in opponent_list:
                 self.possible_kill.append((xpos,ypos))
                 break
+            
             xpos = xpos + change_x
             ypos = ypos + change_y
     
         
 
-    def possible_moves(self, win, opponent_list, friendly_list):
+    def possible_moves(self, opponent_list, friendly_list, opponent_king):
         """Prior Moves check.
         """
         xpos=self.x
         ypos=self.y
         
-        self.utility_check(xpos, ypos, opponent_list, friendly_list, 0,100)
-        self.utility_check(xpos, ypos, opponent_list, friendly_list, 0,-100)
-        self.utility_check(xpos, ypos, opponent_list, friendly_list, 100,0)
-        self.utility_check(xpos, ypos, opponent_list, friendly_list, -100,0)
+        self.utility_check(xpos, ypos, opponent_list, friendly_list, 0,100, opponent_king)
+        self.utility_check(xpos, ypos, opponent_list, friendly_list, 0,-100, opponent_king)
+        self.utility_check(xpos, ypos, opponent_list, friendly_list, 100,0, opponent_king)
+        self.utility_check(xpos, ypos, opponent_list, friendly_list, -100,0, opponent_king)
 
-        super().possible_draw(win, self.possible, self.possible_kill)
+        #super().possible_draw(win, self.possible, self.possible_kill)
 
     def possible_moves_remove(self, win):
 
@@ -68,6 +75,34 @@ class Rook(piece):
         self.possible_kill=[]
 
             
+    def on_check_move(self, king_checkers ,opponent_list,friendly_list, friendly_king,opponent_king):
+        king_checkers.possible_moves( friendly_list, opponent_list, friendly_king)
+        temp= []
+        temp_kill=[]
+        king_checkers_possible = king_checkers.king_line_of_attack
+        self.possible_moves(opponent_list,friendly_list, opponent_king)
+        for i in self.possible:
+            if i in king_checkers_possible:
+                temp.append(i)
+ 
+        if (king_checkers.x,king_checkers.y) in self.possible_kill:
+           
+            temp_kill.append((king_checkers.x,king_checkers.y))
 
+        self.possible=temp
+        self.possible_kill=temp_kill
+        
+        
+    
+
+    
+    def possible_move_on_check(self, newx, newy):
+        """
+        posterior move.
+        """
+        self.x = newx
+        self.y = newy
+        
+           
     def name(self):
         return "rook"

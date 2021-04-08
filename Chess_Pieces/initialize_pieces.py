@@ -2,6 +2,7 @@ import pygame
 import os
 import sys
 
+
 PATH_CHANGE = r"C:\Users\mohit\Documents\pygame Projects\CHESS_AI"
 PATH_CHANGE1 = r"C:\Users\mohit\Documents\pygame Projects\CHESS_AI\Chess_Pieces"
 sys.path.append(PATH_CHANGE)
@@ -46,7 +47,7 @@ class Black:
     
     def __init__(self):
         self.list = {
-            pos["e8"]: King(pos["e8"][0], pos["e8"][1], self.king_img),
+            pos["e8"]: King(pos["e8"][0], pos["e8"][1], self.king_img,1),
             pos["d8"]: Queen(pos["d8"][0], pos["d8"][1], self.queen_img,1),
             pos["c8"]: Bishop(pos["c8"][0], pos["c8"][1], self.bishop_img,1),
             pos["f8"]: Bishop(pos["f8"][0], pos["f8"][1], self.bishop_img,1),
@@ -74,7 +75,7 @@ class Black:
     
     def death(self, xpos, ypos):
         if(xpos, ypos) in self.list:
-            self.list.pop((xpos, ypos))
+            return self.list.pop((xpos, ypos))
 
     def manage(self, current_piece, xpos, ypos):
         self.list[(xpos,ypos)] = current_piece
@@ -93,7 +94,7 @@ class White:
     
     def __init__(self):
         self.list = {
-            pos["e1"]: King(pos["e1"][0], pos["e1"][1], self.king_img),
+            pos["e1"]: King(pos["e1"][0], pos["e1"][1], self.king_img,0),
             pos["d1"]: Queen(pos["d1"][0], pos["d1"][1], self.queen_img,0),
             pos["c1"]: Bishop(pos["c1"][0], pos["c1"][1], self.bishop_img,0),
             pos["f1"]: Bishop(pos["f1"][0], pos["f1"][1], self.bishop_img,0),
@@ -123,9 +124,14 @@ class White:
         self.list[(xpos,ypos)] = current_piece
         self.list.pop((current_piece.x, current_piece.y))
 
+    def return_manage(self, current_piece, xpos, ypos):
+        self.list[(xpos,ypos)] = current_piece
+        self.list.pop((current_piece.x, current_piece.y))
+
+
     def death(self, xpos, ypos):
         if(xpos, ypos) in self.list:
-            self.list.pop((xpos, ypos))
+            return self.list.pop((xpos, ypos))
 
 class init_pieces:
 
@@ -134,6 +140,11 @@ class init_pieces:
         self.white = White()
         self.turn = turn
         self.current_piece = None
+        self.white_king = self.white.list[pos["e1"]]
+        self.black_king = self.black.list[pos["e8"]]
+        self.king_checkers = []
+        self.king_checkers_2 = []
+        self.deletd_piece = None
 
     def draw(self, win):
         self.black.draw_pieces(win)
@@ -152,14 +163,101 @@ class init_pieces:
                 return True
         return False
 
+    def return_to_initial_state(self, xpos,ypos):
+        
+        nxpos,nypos = self.current_piece.x, self.current_piece.y
+        self.current_piece.x, self.current_piece.y = xpos,ypos
+        if self.turn == 0:
+            self.white.list[(xpos,ypos)] = self.current_piece
+            self.white.list.pop((nxpos,nypos)) 
+            
+            if(self.deletd_piece):
+                self.black.list[(nxpos,nypos)] = self.deletd_piece 
+            self.deletd_piece = None    
+        else:
+            self.black.list[(xpos,ypos)] = self.current_piece
+            self.black.list.pop((nxpos,nypos)) 
+            
+            if(self.deletd_piece):
+                self.white.list[(nxpos,nypos)] = self.deletd_piece 
+            self.deletd_piece = None
+
     def possible_draw(self,win):
         if self.turn == 0:
             self.current_piece = self.white.list[self.curr_xpos,self.curr_ypos]
-            self.current_piece.possible_moves(win, self.black.list, self.white.list)
-        if self.turn == 1:
-            self.current_piece = self.black.list[self.curr_xpos,self.curr_ypos]
-            self.current_piece.possible_moves(win, self.white.list, self.black.list)
+            if len(self.king_checkers) == 0:
+                self.current_piece.possible_moves( self.black.list, self.white.list, self.black_king)
+                self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
+            
+            elif len(self.king_checkers) == 1:
+                self.current_piece.on_check_move(self.king_checkers[0], self.black.list, self.white.list, self.white_king,self.black_king)
+                
+                xold,yold = self.current_piece.x, self.current_piece.y    
+                self.king_checkers[0].possible_kill = [] 
+                    
+                if(len(self.current_piece.possible) != 0):
+                    
+                    self.possible_move_piece(self.current_piece.possible[0][0], self.current_piece.possible[0][1])
+                    self.checking_condition2(self.white.list, self.black.list)
 
+                    if len(self.king_checkers_2)!= 0:
+                        self.current_piece.possible = []
+                        self.current_piece.possible_kill = []
+                    self.return_to_initial_state(xold, yold)
+                    
+
+                if(len(self.current_piece.possible_kill)!=0):        
+                    
+                    self.possible_move_piece(self.current_piece.possible_kill[0][0], self.current_piece.possible_kill[0][1])
+                    self.checking_condition2(self.white.list, self.black.list)
+                    
+                    if len(self.king_checkers_2)!= 0:
+                        self.current_piece.possible = []
+                        self.current_piece.possible_kill = []
+                    self.return_to_initial_state(xold, yold)
+                    
+                self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
+                
+
+        
+        if self.turn == 1:
+           
+            self.current_piece = self.black.list[self.curr_xpos,self.curr_ypos]
+           
+            if len(self.king_checkers) == 0:
+            
+                self.current_piece.possible_moves( self.white.list, self.black.list, self.white_king)
+                self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
+           
+            elif len(self.king_checkers) == 1:
+                self.current_piece.on_check_move(self.king_checkers[0], self.black.list, self.white.list, self.white_king,self.white_king)
+                
+                xold,yold = self.current_piece.x, self.current_piece.y    
+                self.king_checkers[0].possible_kill = [] 
+                    
+                if(len(self.current_piece.possible) != 0):
+                    
+                    self.possible_move_piece(self.current_piece.possible[0][0], self.current_piece.possible[0][1])
+                    self.checking_condition2(self.white.list, self.black.list)
+
+                    if len(self.king_checkers_2)!= 0:
+                        self.current_piece.possible = []
+                        self.current_piece.possible_kill = []
+                    self.return_to_initial_state(xold, yold)
+                    
+
+                if(len(self.current_piece.possible_kill)!=0):        
+                    
+                    self.possible_move_piece(self.current_piece.possible_kill[0][0], self.current_piece.possible_kill[0][1])
+                    self.checking_condition2(self.white.list, self.black.list)
+                    
+                    if len(self.king_checkers_2)!= 0:
+                        self.current_piece.possible = []
+                        self.current_piece.possible_kill = []
+                    self.return_to_initial_state(xold, yold)
+                    
+                self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
+                
 
     def possible_draw_remove(self,win):
         if self.current_piece:
@@ -177,8 +275,58 @@ class init_pieces:
                 self.white.death(xpos, ypos)
                 self.turn = 0
             self.current_piece.move(win, xpos,ypos)
+
+    def possible_move_piece(self, xpos,ypos,):
+        
+        #if (xpos,ypos) in self.current_piece.possible or (xpos,ypos) in self.current_piece.possible_kill:
+        if self.turn==0:
+            self.white.manage(self.current_piece, xpos, ypos)
+            self.deleted_piece = self.black.death(xpos, ypos)
+
+        else:
+            self.black.manage(self.current_piece, xpos, ypos)
             
+            self.deleted_piece = self.white.death(xpos, ypos)
+        
+        self.current_piece.possible_move_on_check(xpos,ypos)
+
+    def checking_condition(self):
+        self.king_checkers=[]
+        if self.turn==0:
+            for _,i in self.black.list.items():
+                i.possible_moves(self.white.list, self.black.list, self.black_king)
+                if (self.white_king.x,self.white_king.y) in i.possible_kill and i not in self.king_checkers:
+                    self.king_checkers.append(i)
+                i.possible = []
+                i.possible_kill = []        
+        else:
+            for _,i in self.white.list.items():
+                i.possible_moves( self.black.list, self.white.list, self.white_king)
+                if (self.black_king.x,self.black_king.y) in i.possible_kill and i not in self.king_checkers:
+                    
+                    self.king_checkers.append(i)    
+                i.possible = []
+                i.possible_kill = [] 
+
+    def checking_condition2(self, white_list, black_list):
+        self.king_checkers_2=[]
+        if self.turn==0:
+            for _,i in black_list.items():
+                i.possible_moves(white_list, black_list, self.black_king)
+                if (self.white_king.x,self.white_king.y) in i.possible_kill and i not in self.king_checkers_2:
+                    self.king_checkers_2.append(i)
+                i.possible = []
+                i.possible_kill = []        
+        else:
+            for _,i in white_list.items():
+                i.possible_moves( black_list, white_list, self.white_king)
+                if (self.black_king.x,self.black_king.y) in i.possible_kill and i not in self.king_checkers_2:
+                    
+                    self.king_checkers_2.append(i)    
+                i.possible = []
+                i.possible_kill = [] 
+
 
 if __name__ == "__main__":
     board(800)
-    print(pos_reverse)
+    

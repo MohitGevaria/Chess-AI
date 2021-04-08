@@ -10,6 +10,9 @@ class Pawn(piece):
         self.possible = []
         self.color = color
         self.possible_kill = []
+        self.king_line_of_attack = []
+
+
 
     def draw(self, win):
         super().draw(win ,self.x, self.y)
@@ -30,7 +33,7 @@ class Pawn(piece):
             return True
         return False
 
-    def possible_moves(self, win, opponent_list, friendly_list):
+    def possible_moves(self, opponent_list, friendly_list, opponent_king):
         xpos=self.x
         ypos=self.y
         if self.initial:
@@ -53,7 +56,7 @@ class Pawn(piece):
                     self.utility_check(xpos,ypos-100, opponent_list, friendly_list)
         self.kill(opponent_list)    
                 
-        super().possible_draw(win, self.possible, self.possible_kill)
+        #super().possible_draw(win, self.possible, self.possible_kill)
 
     def possible_moves_remove(self, win):
         for i in self.possible:
@@ -63,7 +66,31 @@ class Pawn(piece):
             super().erase(win, i)
         self.possible_kill=[]
 
-            
+    def possible_move_on_check(self, newx, newy):
+        """
+        posterior move.
+        """
+        self.x = newx
+        self.y = newy
+        
+    def on_check_move(self, king_checkers ,opponent_list,friendly_list, friendly_king,opponent_king):
+        king_checkers.possible_moves( friendly_list, opponent_list, friendly_king)
+        temp= []
+        temp_kill=[]
+        king_checkers_possible = king_checkers.king_line_of_attack
+        self.possible_moves(opponent_list,friendly_list, opponent_king)
+        for i in self.possible:
+            if i in king_checkers_possible:
+                temp.append(i)
+ 
+        if (king_checkers.x,king_checkers.y) in self.possible_kill:
+           
+            temp_kill.append((king_checkers.x,king_checkers.y))
+
+        self.possible=temp
+        self.possible_kill=temp_kill
+        
+        
 
     def name(self):
         return "pawn"

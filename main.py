@@ -61,11 +61,12 @@ def main():
                             
                             load_pieces.possible_draw_remove(win)
                             apos,bpos=xpos,ypos
-                       
+
                         load_pieces.possible_draw(win)
+                        
 
                     load_pieces.move_piece(win, xpos , ypos)
-
+                    load_pieces.checking_condition()
         
                         
         draw(win)
