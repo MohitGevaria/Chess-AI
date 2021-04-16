@@ -42,6 +42,7 @@ class King(piece):
                 self.possible_kill.append((xpos,ypos))
             if(xpos == opponent_king.x)and (ypos == opponent_king.y):
                 self.king_line_of_attack.append((xpos,ypos))
+                self.possible_kill.remove((xpos,ypos))
 
 
             xpos = xpos + change_x
@@ -74,24 +75,16 @@ class King(piece):
         self.possible_kill=[]
 
     def on_check_move(self, king_checkers ,opponent_list,friendly_list, friendly_king,opponent_king):
+        
+
         king_checkers.possible_moves( friendly_list, opponent_list, friendly_king)
-        temp= []
-        temp_kill=[]
         king_checkers_possible = king_checkers.king_line_of_attack
         self.possible_moves(opponent_list,friendly_list, opponent_king)
         for i in self.possible:
             if i in king_checkers_possible:
-                temp.append(i)
- 
-        if (king_checkers.x,king_checkers.y) in self.possible_kill:
-           
-            temp_kill.append((king_checkers.x,king_checkers.y))
+                self.possible.remove(i)
 
-        self.possible=temp
-        self.possible_kill=temp_kill
         
-        
-    
 
     def possible_move_on_check(self, newx, newy):
         """

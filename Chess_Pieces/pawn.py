@@ -33,7 +33,7 @@ class Pawn(piece):
             return True
         return False
 
-    def possible_moves(self, opponent_list, friendly_list, opponent_king):
+    def possible_moves(self, opponent_list, friendly_list, opponent_king, enpassant=None):
         xpos=self.x
         ypos=self.y
         if self.initial:
@@ -54,7 +54,10 @@ class Pawn(piece):
             else:
                 if(self.end_of_board(xpos,ypos-100)):
                     self.utility_check(xpos,ypos-100, opponent_list, friendly_list)
-        self.kill(opponent_list)    
+
+
+
+        self.kill(opponent_list, enpassant)    
                 
         #super().possible_draw(win, self.possible, self.possible_kill)
 
@@ -95,8 +98,11 @@ class Pawn(piece):
     def name(self):
         return "pawn"
 
-    def kill(self, opponent_list):
+    def kill(self, opponent_list, enpassant=None):
         if(self.color==0):
+
+        
+
             if (self.end_of_board(self.x-100, self.y-100)) and (self.x-100, self.y-100) in opponent_list:
                 self.possible_kill.append((self.x-100, self.y-100))
                 

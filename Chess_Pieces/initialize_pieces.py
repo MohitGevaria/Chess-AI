@@ -145,6 +145,7 @@ class init_pieces:
         self.king_checkers = []
         self.king_checkers_2 = []
         self.deletd_piece = None
+        self.enpassant = None
 
     def draw(self, win):
         self.black.draw_pieces(win)
@@ -182,43 +183,108 @@ class init_pieces:
                 self.white.list[(nxpos,nypos)] = self.deletd_piece 
             self.deletd_piece = None
 
+    def validate_each_move(self):
+        xold,yold = self.current_piece.x, self.current_piece.y    
+        
+        for each_move in self.current_piece.possible:
+            
+            
+            self.possible_move_piece(each_move[0], each_move[1])
+            self.checking_condition2(self.white.list, self.black.list)
+
+            if len(self.king_checkers_2)!= 0:
+                self.current_piece.possible=[] 
+                self.return_to_initial_state(xold, yold)
+                break   
+            self.return_to_initial_state(xold, yold)
+
+
+        for each_move in self.current_piece.possible_kill:
+            
+            if self.turn==1 and (each_move[0], each_move[1]) in self.white.list:
+                self.deleted_piece = self.white.list[(each_move[0], each_move[0])]
+            if self.turn==0 and (each_move[0], each_move[1]) in self.black.list:
+                self.deleted_piece = self.black.list[(each_move[0], each_move[1])]
+            
+            self.possible_move_piece(each_move[0], each_move[1])
+            self.checking_condition2(self.white.list, self.black.list)
+            
+
+
+            if len(self.king_checkers_2)!= 0:
+                self.current_piece.possible_kill=[]
+                self.return_to_initial_state(xold, yold)
+                break
+            self.return_to_initial_state(xold, yold)
+    
+    def validate_each_move_for_king(self): 
+        
+        xold,yold = self.current_piece.x, self.current_piece.y    
+        
+        if(len(self.current_piece.possible) != 0):
+            for each_move in self.current_piece.possible:
+                self.possible_move_piece(each_move[0], each_move[1])
+                self.checking_condition2(self.white.list, self.black.list)
+
+                if len(self.king_checkers_2)!= 0:
+                    self.current_piece.possible.remove(each_move)    
+                self.return_to_initial_state(xold, yold)
+        
+        if(len(self.current_piece.possible_kill)!=0):        
+            for each_move in self.current_piece.possible_kill:
+
+                if self.turn==1 and (each_move[0], each_move[1]) in self.white.list:
+                    self.deleted_piece = self.white.list[(each_move[0], each_move[1])]
+                if self.turn==0 and (each_move[0], each_move[1]) in self.black.list:
+                    self.deleted_piece = self.black.list[(each_move[0], each_move[1])]
+            
+            
+                self.possible_move_piece(each_move[0], each_move[1])
+                self.checking_condition2(self.white.list, self.black.list)
+                
+                if len(self.king_checkers_2)!= 0:
+                    self.current_piece.possible_kill.remove(each_move)
+                self.return_to_initial_state(xold, yold)   
+
     def possible_draw(self,win):
         if self.turn == 0:
             self.current_piece = self.white.list[self.curr_xpos,self.curr_ypos]
+            
             if len(self.king_checkers) == 0:
-                self.current_piece.possible_moves( self.black.list, self.white.list, self.black_king)
+                
+                if self.current_piece.name() == "pawn":
+                        self.current_piece.possible_moves( self.black.list, self.white.list, self.black_king, self.enpassant)
+                else:    
+                        self.current_piece.possible_moves( self.black.list, self.white.list, self.black_king)
+                
+
+                self.validate_each_move()
                 self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
             
             elif len(self.king_checkers) == 1:
                 self.current_piece.on_check_move(self.king_checkers[0], self.black.list, self.white.list, self.white_king,self.black_king)
-                
-                xold,yold = self.current_piece.x, self.current_piece.y    
                 self.king_checkers[0].possible_kill = [] 
-                    
-                if(len(self.current_piece.possible) != 0):
-                    
-                    self.possible_move_piece(self.current_piece.possible[0][0], self.current_piece.possible[0][1])
-                    self.checking_condition2(self.white.list, self.black.list)
 
-                    if len(self.king_checkers_2)!= 0:
-                        self.current_piece.possible = []
-                        self.current_piece.possible_kill = []
-                    self.return_to_initial_state(xold, yold)
-                    
+                if self.current_piece.name() == "king":
 
-                if(len(self.current_piece.possible_kill)!=0):        
-                    
-                    self.possible_move_piece(self.current_piece.possible_kill[0][0], self.current_piece.possible_kill[0][1])
-                    self.checking_condition2(self.white.list, self.black.list)
-                    
-                    if len(self.king_checkers_2)!= 0:
-                        self.current_piece.possible = []
-                        self.current_piece.possible_kill = []
-                    self.return_to_initial_state(xold, yold)
-                    
-                self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
+                    self.validate_each_move_for_king()
                 
+                else:    
 
+                    self.validate_each_move()
+    
+                self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
+            
+            elif len(self.king_checkers) == 2:
+                if self.current_piece.name() == "king":
+
+                    self.current_piece.on_check_move(self.king_checkers[0], self.black.list, self.white.list, self.white_king,self.black_king)
+                    self.king_checkers[0].possible_kill = []     
+                    self.validate_each_move_for_king()
+                
+                else:
+                    self.current_piece.possible=[]
+                    self.current_piece.possible_kill=[]
         
         if self.turn == 1:
            
@@ -227,37 +293,32 @@ class init_pieces:
             if len(self.king_checkers) == 0:
             
                 self.current_piece.possible_moves( self.white.list, self.black.list, self.white_king)
+                self.validate_each_move()
                 self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
            
             elif len(self.king_checkers) == 1:
-                self.current_piece.on_check_move(self.king_checkers[0], self.black.list, self.white.list, self.white_king,self.white_king)
                 
-                xold,yold = self.current_piece.x, self.current_piece.y    
+                self.current_piece.on_check_move(self.king_checkers[0], self.white.list, self.black.list, self.black_king,self.white_king)
                 self.king_checkers[0].possible_kill = [] 
                     
-                if(len(self.current_piece.possible) != 0):
-                    
-                    self.possible_move_piece(self.current_piece.possible[0][0], self.current_piece.possible[0][1])
-                    self.checking_condition2(self.white.list, self.black.list)
-
-                    if len(self.king_checkers_2)!= 0:
-                        self.current_piece.possible = []
-                        self.current_piece.possible_kill = []
-                    self.return_to_initial_state(xold, yold)
-                    
-
-                if(len(self.current_piece.possible_kill)!=0):        
-                    
-                    self.possible_move_piece(self.current_piece.possible_kill[0][0], self.current_piece.possible_kill[0][1])
-                    self.checking_condition2(self.white.list, self.black.list)
-                    
-                    if len(self.king_checkers_2)!= 0:
-                        self.current_piece.possible = []
-                        self.current_piece.possible_kill = []
-                    self.return_to_initial_state(xold, yold)
-                    
+                if self.current_piece.name() == "king":
+                    self.validate_each_move_for_king()
+                
+                else:    
+                    self.validate_each_move()
+        
                 self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
                 
+            elif len(self.king_checkers) == 2:
+                if self.current_piece.name() == "king":
+
+                    self.current_piece.on_check_move(self.king_checkers[0], self.white.list, self.black.list, self.black_king,self.white_king)
+                    self.king_checkers[0].possible_kill = []     
+                    self.validate_each_move_for_king()
+                
+                else:
+                    self.current_piece.possible=[]
+                    self.current_piece.possible_kill=[]
 
     def possible_draw_remove(self,win):
         if self.current_piece:
@@ -266,6 +327,10 @@ class init_pieces:
     def move_piece(self,win, xpos,ypos):
         
         if (xpos,ypos) in self.current_piece.possible or (xpos,ypos) in self.current_piece.possible_kill:
+            
+            if(self.current_piece.name() == "pawn"):
+                if(self.current_piece.initial==True):
+                    self.enpassant = (xpos,ypos)
             if self.turn==0:
                 self.white.manage(self.current_piece, xpos, ypos)
                 self.black.death(xpos, ypos)
