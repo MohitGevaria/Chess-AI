@@ -11,8 +11,11 @@ class Pawn(piece):
         self.color = color
         self.possible_kill = []
         self.king_line_of_attack = []
-
-
+        # self.two_moves = False
+        self.enpassant = False
+        self.right= False
+        self.left = False
+        self.enpassant_possible_moves=[]
 
     def draw(self, win):
         super().draw(win ,self.x, self.y)
@@ -33,7 +36,7 @@ class Pawn(piece):
             return True
         return False
 
-    def possible_moves(self, opponent_list, friendly_list, opponent_king, enpassant=None):
+    def possible_moves(self, opponent_list, friendly_list, opponent_king ):
         xpos=self.x
         ypos=self.y
         if self.initial:
@@ -56,8 +59,9 @@ class Pawn(piece):
                     self.utility_check(xpos,ypos-100, opponent_list, friendly_list)
 
 
-
-        self.kill(opponent_list, enpassant)    
+    
+        self.kill(opponent_list)
+        self.enpassant_move()
                 
         #super().possible_draw(win, self.possible, self.possible_kill)
 
@@ -113,3 +117,42 @@ class Pawn(piece):
                 self.possible_kill.append((self.x+100, self.y+100))
             if (self.end_of_board(self.x-100, self.y+100)) and (self.x-100, self.y+100) in opponent_list:
                 self.possible_kill.append((self.x-100, self.y+100))
+
+    def two_moves(self,xpos,ypos):
+        if self.y - ypos == 200 or  self.y - ypos == -200:
+            return True
+        return False
+
+    def enpassant_move(self):
+
+        if self.enpassant:
+
+            if self.color == 0 :
+                if self.left:
+                    x=self.x -100
+                    y=self.y  - 100 
+                    if ((x,y) not in self.possible_kill) and ((x,y) not in self.possible):
+                        self.possible.append((x,y))
+                        self.enpassant_possible_moves.append((x,y))
+
+                if self.right:
+                    x=self.x +100
+                    y=self.y  - 100 
+                    if ((x,y) not in self.possible_kill) and ((x,y) not in self.possible):
+                        self.possible.append((x,y))
+                        self.enpassant_possible_moves.append((x,y))
+
+            if self.color == 1 :
+                if self.left:
+                    x=self.x +100
+                    y=self.y  + 100 
+                    if ((x,y) not in self.possible_kill) and ((x,y) not in self.possible):
+                        self.possible.append((x,y))
+                        self.enpassant_possible_moves.append((x,y))
+
+                if self.right:
+                    x=self.x -100
+                    y=self.y  + 100 
+                    if ((x,y) not in self.possible_kill) and ((x,y) not in self.possible):
+                        self.possible.append((x,y))
+                        self.enpassant_possible_moves.append((x,y))

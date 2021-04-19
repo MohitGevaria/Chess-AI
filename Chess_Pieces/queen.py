@@ -2,6 +2,7 @@ from piece import piece
 import copy
 
 class Queen(piece):
+
     def __init__(self, x, y, image, color):
         super().__init__(image)
         self.x = x
@@ -14,7 +15,6 @@ class Queen(piece):
     # draws the piece on the board
     def draw(self, win):
         super().draw(win ,self.x, self.y)
-
 
     def move(self, win, newx, newy):
         """
@@ -36,8 +36,6 @@ class Queen(piece):
         self.x = newx
         self.y = newy
         
-        
-    
     def utility_check(self, xpos, ypos, opponent_list, friendly_list, change_x, change_y, opponent_king):
         xpos = xpos + change_x
         ypos = ypos + change_y
@@ -58,8 +56,6 @@ class Queen(piece):
             
             xpos = xpos + change_x
             ypos = ypos + change_y
-    
-        
 
     def possible_moves(self, opponent_list, friendly_list, opponent_king):
         """Prior Moves check.
@@ -75,9 +71,6 @@ class Queen(piece):
         self.utility_check(xpos, ypos, opponent_list, friendly_list, 100,0, opponent_king)
         self.utility_check(xpos, ypos, opponent_list, friendly_list, -100,0, opponent_king)
 
-        
-        
-
     def possible_moves_remove(self, win):
 
         for i in self.possible:
@@ -87,11 +80,6 @@ class Queen(piece):
             super().erase(win, i)
         self.possible_kill=[]
 
-            
-    
-
-        
-    
     def on_check_move(self, king_checkers ,opponent_list,friendly_list, friendly_king,opponent_king):
         king_checkers.possible_moves( friendly_list, opponent_list, friendly_king)
         temp= []
@@ -108,11 +96,7 @@ class Queen(piece):
 
         self.possible=temp
         self.possible_kill=temp_kill
-        
-        
-    
-
-                                
+                                      
     def name(self):
         return "queen"
 

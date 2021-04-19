@@ -2,7 +2,6 @@ import pygame
 from Board import board, draw_board, number, alphabets, pos, unique
 from Chess_Pieces.initialize_pieces import init_pieces
 
-
 WIDTH = 800
 HEIGHT = WIDTH
 BOX = WIDTH // 8
@@ -16,7 +15,6 @@ PURPLE = (128, 0, 128)
 ORANGE = (255, 165, 0)
 GREY = (128, 128, 128)
 TURQUOISE = (64, 224, 208)
-
 
 win = pygame.display.set_mode((WIDTH, HEIGHT)) 
 
@@ -67,7 +65,6 @@ def main():
 
                     load_pieces.move_piece(win, xpos , ypos)
                     load_pieces.checking_condition()
-        
                         
         draw(win)
 

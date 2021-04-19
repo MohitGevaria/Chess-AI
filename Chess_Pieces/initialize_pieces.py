@@ -1,10 +1,11 @@
 import pygame
 import os
 import sys
+import copy
 
 
-PATH_CHANGE = r"C:\Users\mohit\Documents\pygame Projects\CHESS_AI"
-PATH_CHANGE1 = r"C:\Users\mohit\Documents\pygame Projects\CHESS_AI\Chess_Pieces"
+PATH_CHANGE = r"C:\Users\kanan\Desktop\Chess-AI-master"
+PATH_CHANGE1 = r"C:\Users\kanan\Desktop\Chess-AI-master\Chess_Pieces"
 sys.path.append(PATH_CHANGE)
 sys.path.append(PATH_CHANGE1)
 from king import King
@@ -76,6 +77,7 @@ class Black:
     def death(self, xpos, ypos):
         if(xpos, ypos) in self.list:
             return self.list.pop((xpos, ypos))
+            
 
     def manage(self, current_piece, xpos, ypos):
         self.list[(xpos,ypos)] = current_piece
@@ -144,8 +146,8 @@ class init_pieces:
         self.black_king = self.black.list[pos["e8"]]
         self.king_checkers = []
         self.king_checkers_2 = []
-        self.deletd_piece = None
-        self.enpassant = None
+        self.deleted_piece = None
+        self.enpassant = []
 
     def draw(self, win):
         self.black.draw_pieces(win)
@@ -172,16 +174,16 @@ class init_pieces:
             self.white.list[(xpos,ypos)] = self.current_piece
             self.white.list.pop((nxpos,nypos)) 
             
-            if(self.deletd_piece):
-                self.black.list[(nxpos,nypos)] = self.deletd_piece 
-            self.deletd_piece = None    
+            if self.deleted_piece is not None:
+                self.black.list[(nxpos,nypos)] = self.deleted_piece 
+            self.deleted_piece = None    
         else:
             self.black.list[(xpos,ypos)] = self.current_piece
             self.black.list.pop((nxpos,nypos)) 
             
-            if(self.deletd_piece):
-                self.white.list[(nxpos,nypos)] = self.deletd_piece 
-            self.deletd_piece = None
+            if self.deleted_piece is not None:
+                self.white.list[(nxpos,nypos)] = self.deleted_piece 
+            self.deleted_piece = None
 
     def validate_each_move(self):
         xold,yold = self.current_piece.x, self.current_piece.y    
@@ -198,24 +200,25 @@ class init_pieces:
                 break   
             self.return_to_initial_state(xold, yold)
 
-
-        for each_move in self.current_piece.possible_kill:
+        temp = copy.deepcopy(self.current_piece.possible_kill)
+        for each_move in temp:
             
-            if self.turn==1 and (each_move[0], each_move[1]) in self.white.list:
-                self.deleted_piece = self.white.list[(each_move[0], each_move[0])]
-            if self.turn==0 and (each_move[0], each_move[1]) in self.black.list:
-                self.deleted_piece = self.black.list[(each_move[0], each_move[1])]
+            # if self.turn==1 and (each_move[0], each_move[1]) in self.white.list:
+            #     self.deleted_piece = self.white.list[(each_move[0], each_move[0])]
+            # if self.turn==0 and (each_move[0], each_move[1]) in self.black.list:
+            #     self.deleted_piece = self.black.list[(each_move[0], each_move[1])]
             
             self.possible_move_piece(each_move[0], each_move[1])
             self.checking_condition2(self.white.list, self.black.list)
             
 
-
+            
             if len(self.king_checkers_2)!= 0:
                 self.current_piece.possible_kill=[]
                 self.return_to_initial_state(xold, yold)
-                break
+                continue
             self.return_to_initial_state(xold, yold)
+        self.current_piece.possible_kill = temp
     
     def validate_each_move_for_king(self): 
         
@@ -229,22 +232,29 @@ class init_pieces:
                 if len(self.king_checkers_2)!= 0:
                     self.current_piece.possible.remove(each_move)    
                 self.return_to_initial_state(xold, yold)
-        
-        if(len(self.current_piece.possible_kill)!=0):        
-            for each_move in self.current_piece.possible_kill:
 
-                if self.turn==1 and (each_move[0], each_move[1]) in self.white.list:
-                    self.deleted_piece = self.white.list[(each_move[0], each_move[1])]
-                if self.turn==0 and (each_move[0], each_move[1]) in self.black.list:
-                    self.deleted_piece = self.black.list[(each_move[0], each_move[1])]
+        
+        
+        if(len(self.current_piece.possible_kill)!=0): 
+            temp = copy.deepcopy(self.current_piece.possible_kill) 
+            for each_move in temp:
+
+                # if self.turn==1 and (each_move[0], each_move[1]) in self.white.list:
+                #     self.deleted_piece = self.white.list[(each_move[0], each_move[1])]
+                # if self.turn==0 and (each_move[0], each_move[1]) in self.black.list:
+                #     self.deleted_piece = self.black.list[(each_move[0], each_move[1])]
             
             
                 self.possible_move_piece(each_move[0], each_move[1])
                 self.checking_condition2(self.white.list, self.black.list)
                 
+                
                 if len(self.king_checkers_2)!= 0:
-                    self.current_piece.possible_kill.remove(each_move)
-                self.return_to_initial_state(xold, yold)   
+                    self.current_piece.possible_kill=[]
+                    self.return_to_initial_state(xold, yold)
+                    continue
+                self.return_to_initial_state(xold, yold) 
+            self.current_piece.possible_kill = temp
 
     def possible_draw(self,win):
         if self.turn == 0:
@@ -252,12 +262,8 @@ class init_pieces:
             
             if len(self.king_checkers) == 0:
                 
-                if self.current_piece.name() == "pawn":
-                        self.current_piece.possible_moves( self.black.list, self.white.list, self.black_king, self.enpassant)
-                else:    
-                        self.current_piece.possible_moves( self.black.list, self.white.list, self.black_king)
-                
-
+                  
+                self.current_piece.possible_moves( self.black.list, self.white.list, self.black_king)
                 self.validate_each_move()
                 self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
             
@@ -327,31 +333,62 @@ class init_pieces:
     def move_piece(self,win, xpos,ypos):
         
         if (xpos,ypos) in self.current_piece.possible or (xpos,ypos) in self.current_piece.possible_kill:
-            
+
+            x= xpos
+            y= ypos
+
             if(self.current_piece.name() == "pawn"):
-                if(self.current_piece.initial==True):
-                    self.enpassant = (xpos,ypos)
+                if self.current_piece.two_moves(xpos,ypos):
+                    self.set_enpassant(xpos,ypos)
+                    
+                if (xpos,ypos) in self.current_piece.enpassant_possible_moves:
+                    if self.turn == 0 :
+                        y=ypos+100
+                        self.black.list[(x,y)].erase(win,(x,y))
+                    if self.turn == 1 :
+                        y=ypos-100
+                        self.white.list[(x,y)].erase(win,(x,y))
+
+                    for i in self.enpassant:
+                        i.enpassant = False
+                        i.right=False
+                        i.left = False
+                        i.enpassant_possible_moves=[]
+            else:
+                for i in self.enpassant:
+                        i.enpassant = False
+                        i.right=False
+                        i.left = False
+                        i.enpassant_possible_moves=[]
+                # if(self.current_piece.initial==True):
+                #     self.enpassant = (xpos,ypos)
             if self.turn==0:
                 self.white.manage(self.current_piece, xpos, ypos)
-                self.black.death(xpos, ypos)
+                self.black.death(x, y)
                 self.turn = 1
             else:
                 self.black.manage(self.current_piece, xpos, ypos)
-                self.white.death(xpos, ypos)
+                self.white.death(x, y)
                 self.turn = 0
             self.current_piece.move(win, xpos,ypos)
+            
+            if(self.current_piece.name() == "pawn"):
+                if self.current_piece.two_moves(xpos,ypos):
+                    self.set_enpassant(xpos,ypos)
 
-    def possible_move_piece(self, xpos,ypos,):
+    def possible_move_piece(self, xpos,ypos):
         
+        self.deleted_piece= None
         #if (xpos,ypos) in self.current_piece.possible or (xpos,ypos) in self.current_piece.possible_kill:
         if self.turn==0:
             self.white.manage(self.current_piece, xpos, ypos)
             self.deleted_piece = self.black.death(xpos, ypos)
+         
 
         else:
             self.black.manage(self.current_piece, xpos, ypos)
-            
             self.deleted_piece = self.white.death(xpos, ypos)
+            
         
         self.current_piece.possible_move_on_check(xpos,ypos)
 
@@ -391,7 +428,37 @@ class init_pieces:
                 i.possible = []
                 i.possible_kill = [] 
 
+    def set_enpassant(self,xpos, ypos):
+        x1=self.current_piece.x + 100
+        x2 = self.current_piece.x -100
+        if self.turn == 0 :
+            if (x1,ypos) in self.black.list:
+                if self.black.list[(x1,ypos)].name() == "pawn":
+                    self.black.list[(x1,ypos)].enpassant = True
+                    self.black.list[(x1,ypos)].right = True
+                    self.enpassant.append(self.black.list[(x1,ypos)])
+
+            if (x2,ypos) in self.black.list:
+                if self.black.list[(x2,ypos)].name() == "pawn":
+                    self.black.list[(x2,ypos)].enpassant = True
+                    self.black.list[(x2,ypos)].left = True
+                    self.enpassant.append(self.black.list[(x2,ypos)])
+
+        else:
+            if (x1,ypos) in self.white.list:
+                
+                if self.white.list[(x1,ypos)].name() == "pawn":
+                    
+                    self.white.list[(x1,ypos)].enpassant = True
+                    self.white.list[(x1,ypos)].left = True
+                    self.enpassant.append(self.white.list[(x1,ypos)])
+
+            if (x2,ypos) in self.white.list:
+                if self.white.list[(x2,ypos)].name() == "pawn":
+                    
+                    self.white.list[(x2,ypos)].enpassant = True
+                    self.white.list[(x2,ypos)].right = True
+                    self.enpassant.append(self.white.list[(x2,ypos)])
 
 if __name__ == "__main__":
-    board(800)
-    
+    board(800)  
