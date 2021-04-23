@@ -9,6 +9,8 @@ class Rook(piece):
         self.color = color
         self.possible_kill = []
         self.king_line_of_attack = []
+        self.is_moved = False
+        
 
     # draws the piece on the board
     def draw(self, win):
@@ -27,6 +29,8 @@ class Rook(piece):
         self.possible=[]
         self.possible_kill=[] 
         self.draw(win) 
+        self.is_moved = True
+        
     
     
     def utility_check(self, xpos, ypos, opponent_list, friendly_list, change_x, change_y, opponent_king):
@@ -63,8 +67,7 @@ class Rook(piece):
         self.utility_check(xpos, ypos, opponent_list, friendly_list, 100,0, opponent_king)
         self.utility_check(xpos, ypos, opponent_list, friendly_list, -100,0, opponent_king)
 
-        #super().possible_draw(win, self.possible, self.possible_kill)
-
+        
     def possible_moves_remove(self, win):
 
         for i in self.possible:
@@ -92,8 +95,7 @@ class Rook(piece):
         self.possible=temp
         self.possible_kill=temp_kill
         
-        
-    
+
 
     
     def possible_move_on_check(self, newx, newy):
@@ -102,6 +104,9 @@ class Rook(piece):
         """
         self.x = newx
         self.y = newy
+
+
+
         
            
     def name(self):

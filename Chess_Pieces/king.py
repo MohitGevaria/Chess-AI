@@ -9,6 +9,8 @@ class King(piece):
         self.color = color
         self.possible_kill = []
         self.king_line_of_attack = []
+        self.is_moved = False
+        self.castle = {}
 
     # draws the piece on the board
     def draw(self, win):
@@ -27,6 +29,9 @@ class King(piece):
         self.possible=[]
         self.possible_kill=[] 
         self.draw(win) 
+        
+        
+        self.castle = {}
     
     def utility_check(self, xpos, ypos, opponent_list, friendly_list, change_x, change_y, opponent_king):
         xpos = xpos + change_x
@@ -63,7 +68,7 @@ class King(piece):
         self.utility_check(xpos, ypos, opponent_list, friendly_list, -100,100, opponent_king)
         self.utility_check(xpos, ypos, opponent_list, friendly_list, 100,-100, opponent_king)
 
-        #super().possible_draw(win, self.possible, self.possible_kill)
+        # self.castle_condition(friendly_list, opponent_list)
 
     def possible_moves_remove(self, win):
 
@@ -74,6 +79,37 @@ class King(piece):
             super().erase(win, i)
         self.possible_kill=[]
 
+    def check_before_castle(self, friendly_list, opponent_list,  change):
+        xpos = self.x + change
+       
+        while((xpos<750) and (xpos>50)):
+            if ((xpos, self.y) in friendly_list) or ((xpos, self.y) in opponent_list): 
+                return False
+            xpos += change
+        return True
+
+
+    def castle_condition(self, friendly_list, opponent_list):
+        
+        if (not (self.is_moved)):
+            
+            if ((50,self.y) in friendly_list): 
+                if (friendly_list[(50,self.y)].name() == "rook" and friendly_list[(50,self.y)].color == self.color ): 
+                
+                    if not (friendly_list[(50,self.y)].is_moved): #a1
+                        if(self.check_before_castle(friendly_list, opponent_list, -100)):
+                            self.possible.append((self.x-200,self.y))
+                            self.castle[(self.x-200,self.y)] = (50,self.y)
+            
+            if ((750,self.y) in friendly_list):
+                if (friendly_list[(750,self.y)].name() == "rook" and friendly_list[(750,self.y)].color == self.color):
+                        
+                    if not (friendly_list[(750,self.y)].is_moved): #h1
+                        if(self.check_before_castle(friendly_list, opponent_list, +100)):
+                            self.possible.append((self.x+200,self.y))
+                            self.castle[(self.x+200,self.y)] = (750,self.y)
+                
+            
     def on_check_move(self, king_checkers ,opponent_list,friendly_list, friendly_king,opponent_king):
         
 

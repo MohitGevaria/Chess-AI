@@ -1,10 +1,4 @@
-import copy 
-class something:
-    def __init__(self):
-        self.kirtan = "Nice"
+test_dict = {"Geeks" : 1, "for" : 2, "geeks" : 3}
 
-d= [1,2,3,4,5,6,7]
-e=copy.deepcopy(d)
-print(d)
-d.pop(1)
-print(d)
+for i in test_dict:
+    print(i)

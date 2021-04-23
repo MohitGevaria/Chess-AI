@@ -4,8 +4,8 @@ import sys
 import copy
 
 
-PATH_CHANGE = r"C:\Users\kanan\Desktop\Chess-AI-master"
-PATH_CHANGE1 = r"C:\Users\kanan\Desktop\Chess-AI-master\Chess_Pieces"
+PATH_CHANGE = r"C:\Users\mohit\Documents\pygame Projects\chess git\chess-enpass\Chess-AI"
+PATH_CHANGE1 = r"C:\Users\mohit\Documents\pygame Projects\chess git\chess-enpass\Chess-AI\Chess_Pieces"
 sys.path.append(PATH_CHANGE)
 sys.path.append(PATH_CHANGE1)
 from king import King
@@ -203,10 +203,6 @@ class init_pieces:
         temp = copy.deepcopy(self.current_piece.possible_kill)
         for each_move in temp:
             
-            # if self.turn==1 and (each_move[0], each_move[1]) in self.white.list:
-            #     self.deleted_piece = self.white.list[(each_move[0], each_move[0])]
-            # if self.turn==0 and (each_move[0], each_move[1]) in self.black.list:
-            #     self.deleted_piece = self.black.list[(each_move[0], each_move[1])]
             
             self.possible_move_piece(each_move[0], each_move[1])
             self.checking_condition2(self.white.list, self.black.list)
@@ -214,47 +210,59 @@ class init_pieces:
 
             
             if len(self.king_checkers_2)!= 0:
-                self.current_piece.possible_kill=[]
+                self.current_piece.possible_kill.remove(each_move)
                 self.return_to_initial_state(xold, yold)
                 continue
             self.return_to_initial_state(xold, yold)
-        self.current_piece.possible_kill = temp
+       
     
     def validate_each_move_for_king(self): 
         
+        if len(self.king_checkers) == 0:
+            if(self.turn==0):
+                self.current_piece.castle_condition(self.white.list, self.black.list)
+            else:
+                self.current_piece.castle_condition(self.black.list, self.white.list)
+
         xold,yold = self.current_piece.x, self.current_piece.y    
         
         if(len(self.current_piece.possible) != 0):
-            for each_move in self.current_piece.possible:
+            temp = copy.deepcopy(self.current_piece.possible)
+            for each_move in temp:
                 self.possible_move_piece(each_move[0], each_move[1])
                 self.checking_condition2(self.white.list, self.black.list)
 
                 if len(self.king_checkers_2)!= 0:
                     self.current_piece.possible.remove(each_move)    
                 self.return_to_initial_state(xold, yold)
-
+            
         
         
         if(len(self.current_piece.possible_kill)!=0): 
             temp = copy.deepcopy(self.current_piece.possible_kill) 
             for each_move in temp:
 
-                # if self.turn==1 and (each_move[0], each_move[1]) in self.white.list:
-                #     self.deleted_piece = self.white.list[(each_move[0], each_move[1])]
-                # if self.turn==0 and (each_move[0], each_move[1]) in self.black.list:
-                #     self.deleted_piece = self.black.list[(each_move[0], each_move[1])]
-            
             
                 self.possible_move_piece(each_move[0], each_move[1])
                 self.checking_condition2(self.white.list, self.black.list)
                 
                 
                 if len(self.king_checkers_2)!= 0:
-                    self.current_piece.possible_kill=[]
+                    self.current_piece.possible_kill.remove(each_move)
                     self.return_to_initial_state(xold, yold)
                     continue
                 self.return_to_initial_state(xold, yold) 
-            self.current_piece.possible_kill = temp
+        
+        for each_move, value in self.current_piece.castle.items():
+            if value[0] > 450:
+                if (each_move[0]-100,each_move[1]) not in self.current_piece.possible:
+                    self.current_piece.possible.remove(each_move)
+            else:
+                if (each_move[0]+100,each_move[1]) not in self.current_piece.possible:
+                    self.current_piece.possible.remove(each_move)
+                    
+
+            
 
     def possible_draw(self,win):
         if self.turn == 0:
@@ -264,7 +272,12 @@ class init_pieces:
                 
                   
                 self.current_piece.possible_moves( self.black.list, self.white.list, self.black_king)
-                self.validate_each_move()
+                
+                if self.current_piece.name() == "king":
+                    self.validate_each_move_for_king()
+                else:
+                    self.validate_each_move()
+
                 self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
             
             elif len(self.king_checkers) == 1:
@@ -299,7 +312,12 @@ class init_pieces:
             if len(self.king_checkers) == 0:
             
                 self.current_piece.possible_moves( self.white.list, self.black.list, self.white_king)
-                self.validate_each_move()
+                
+                if self.current_piece.name() == "king":
+                    self.validate_each_move_for_king()
+                else:
+                    self.validate_each_move()
+
                 self.current_piece.possible_draw(win, self.current_piece.possible, self.current_piece.possible_kill)
            
             elif len(self.king_checkers) == 1:
@@ -354,6 +372,26 @@ class init_pieces:
                         i.right=False
                         i.left = False
                         i.enpassant_possible_moves=[]
+            elif(self.current_piece.name() == "king"):
+                if(xpos,ypos) in self.current_piece.castle:
+
+                    rook_xpos = self.current_piece.castle[(xpos,ypos)][0]
+                    rook_ypos = self.current_piece.castle[(xpos,ypos)][1]
+                    if(self.turn==0):
+                        if xpos > 450:
+                            
+                            self.white.manage(self.white.list[(rook_xpos, rook_ypos)], xpos-100, ypos)
+                            self.white.list[(xpos-100,ypos)].move(win,xpos-100 , ypos)
+                        else:
+                            self.white.manage(self.white.list[(rook_xpos, rook_ypos)], xpos+100, ypos)
+                            self.white.list[(xpos+100,ypos)].move(win,xpos+100 , ypos)
+                    else:
+                        if xpos > 450:
+                            self.black.manage(self.black.list[(rook_xpos, rook_ypos)], xpos-100, ypos)
+                            self.black.list[(xpos-100,ypos)].move(win,xpos-100 , ypos)
+                        else:
+                            self.black.manage(self.black.list[(rook_xpos, rook_ypos)], xpos+100, ypos)
+                            self.black.list[(xpos+100,ypos)].move(win,xpos+100 , ypos)
             else:
                 for i in self.enpassant:
                         i.enpassant = False
